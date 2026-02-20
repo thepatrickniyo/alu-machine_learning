@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-'''
-Exoectation Maximization for a Gaussian Mixture Model
-'''
+"""[summary]
 
-
+Returns:
+    [type]: [description]
+"""
 import numpy as np
 initialize = __import__('4-initialize').initialize
 expectation = __import__('6-expectation').expectation
@@ -11,25 +11,44 @@ maximization = __import__('7-maximization').maximization
 
 
 def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
-    '''
-    Expectation maximization for a GMM
-    '''
-    if not isinstance(X, np.ndarray):
-        return None, None, None, None, None
-    if not isinstance(k, int):
-        return None, None, None, None, None
-    if not isinstance(iterations, int):
-        return None, None, None, None, None
-    if not isinstance(tol, float):
-        return None, None, None, None, None
-    if not isinstance(verbose, bool):
-        return None, None, None, None, None
+    """[summary]
 
+    Args:
+        X ([type]): [description]
+        k ([type]): [description]
+        iterations (int, optional): [description]. Defaults to 1000.
+        tol ([type], optional): [description]. Defaults to 1e-5.
+        verbose (bool, optional): [description]. Defaults to False.
+
+    Returns:
+        [type]: [description]
+    """
+    if not isinstance(X, np.ndarray) or len(X.shape) != 2:
+        return None, None, None, None, None
+    if type(k) != int or k <= 0 or k >= X.shape[0]:
+        return None, None, None, None, None
+    if type(iterations) != int or iterations <= 0:
+        return None, None, None, None, None
+    if type(tol) != float or tol <= 0:
+        return None, None, None, None, None
+    if type(verbose) != bool:
+        return None, None, None, None, None
     pi, m, S = initialize(X, k)
-    g, l = expectation(X, pi, m, S)
+    prev_like = 0
+    g, likelihood = expectation(X, pi, m, S)
     for i in range(iterations):
+        if verbose and (i % 10 == 0):
+            msg = 'Log Likelihood after {} iterations: {}'\
+                .format(i, likelihood.round(5))
+            print(msg)
         pi, m, S = maximization(X, g)
-        g, l = expectation(X, pi, m, S)
-        if verbose and i % 10 == 0:
-            print(f"Log Likelihood after {i} iterations: {l:.5f}")
-    return pi, m, S, g, l
+        g, likelihood = expectation(X, pi, m, S)
+
+        if abs(likelihood - prev_like) <= tol:
+            break
+        prev_like = likelihood
+    if verbose:
+        msg = 'Log Likelihood after {} iterations: {}'\
+            .format(i + 1, likelihood.round(5))
+        print(msg)
+    return pi, m, S, g, likelihood
