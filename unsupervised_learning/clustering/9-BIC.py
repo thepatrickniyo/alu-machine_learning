@@ -1,16 +1,54 @@
+
 #!/usr/bin/env python3
-"""
-Defines function that finds the best number of clusters for a GMM using
-the Bayesian Information Criterion (BIC)
-"""
+"""[summary]
 
-
+Returns:
+    [type]: [description]
+"""
 import numpy as np
-expectation_maximization = __import__('7-EM').expectation_maximization
+expectation_maximization = __import__('8-EM').expectation_maximization
 
 
 def BIC(X, kmin=1, kmax=None, iterations=1000, tol=1e-5, verbose=False):
+    """[summary]
+
+    Args:
+        X ([type]): [description]
+        kmin (int, optional): [description]. Defaults to 1.
+        kmax ([type], optional): [description]. Defaults to None.
+        iterations (int, optional): [description]. Defaults to 1000.
+        tol ([type], optional): [description]. Defaults to 1e-5.
+        verbose (bool, optional): [description]. Defaults to False.
+
+    Returns:
+        [type]: [description]
     """
-    Find the best number of clusters for a GMM using BIC
-    """
-    return None, None, None, None
+    if not isinstance(X, np.ndarray) or len(X.shape) != 2:
+        return None, None, None, None
+    if type(kmin) != int or kmin <= 0 or kmin >= X.shape[0]:
+        return None, None, None, None
+    if type(kmax) != int or kmax <= 0 or kmax >= X.shape[0]:
+        return None, None, None, None
+    if kmin >= kmax:
+        return None, None, None, None
+    if type(iterations) != int or iterations <= 0:
+        return None, None, None, None
+    if type(tol) != float or tol <= 0:
+        return None, None, None, None
+    if type(verbose) != bool:
+        return None, None, None, None
+    n, d = X.shape
+    k_r, result, l_b, b = [], [], [], []
+    for k in range(kmin, kmax + 1):
+        pi, m, S, g, like = expectation_maximization(
+            X, k, iterations, tol, verbose)
+        k_r.append(k)
+        result.append((pi, m, S))
+        l_b.append(like)
+        p = (k * d * (d + 1) / 2) + (d * k) + k - 1
+        bic = p * np.log(n) - 2 * like
+        b.append(bic)
+    b = np.array(b)
+    best = np.argmin(b)
+    l_b = np.array(l_b)
+    return k_r[best], result[best], l_b[best], b[best]
